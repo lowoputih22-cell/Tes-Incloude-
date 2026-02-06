@@ -52,7 +52,6 @@ button:hover{
   background:#16a34a;
 }
 
-/* konten */
 #content{
   flex:1;
   padding:20px;
@@ -75,7 +74,7 @@ button:hover{
 #popupBox{
   background:white;
   padding:20px;
-  width:320px;
+  width:330px;
   border-radius:10px;
 }
 </style>
@@ -85,9 +84,7 @@ button:hover{
 
 <div id="sidebar">
   <h2>MENU</h2>
-
   <div id="menuList"></div>
-
   <button onclick="bukaPopup()">+ Tambah Menu</button>
 </div>
 
@@ -105,22 +102,35 @@ button:hover{
     <input type="text" id="namaMenu" style="width:100%;padding:8px">
 
     <br><br>
-    Pilih File:
-    <select id="fileSelect" style="width:100%;padding:8px"></select>
+    Sumber Menu:
+    <select id="sumber" onchange="gantiSumber()" style="width:100%;padding:8px">
+      <option value="github">Folder Menu Github</option>
+      <option value="link">Link Manual</option>
+    </select>
 
     <br><br>
-    <button onclick="tambahMenu()">Tambah</button>
-    <button onclick="tutupPopup()" style="background:red;margin-top:5px">Batal</button>
+    <div id="pilihGithub">
+      Pilih File:
+      <select id="fileSelect" style="width:100%;padding:8px"></select>
+    </div>
+
+    <div id="pilihLink" style="display:none">
+      Masukkan Link:
+      <input type="text" id="linkManual" placeholder="https://..." style="width:100%;padding:8px">
+    </div>
+
+    <br>
+    <button onclick="tambahMenu()">Tambah Menu</button>
+    <button onclick="tutupPopup()" style="background:red;margin-top:6px">Batal</button>
   </div>
 </div>
 
 <script>
-// =============================
-// CONFIG
+// ================= CONFIG =================
 const username = "lowoputih22-cell";
 const repo = "Tes-Incloude-";
 const folder = "Menu";
-// =============================
+// ==========================================
 
 const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${folder}`;
 
@@ -147,7 +157,20 @@ function tutupPopup(){
   document.getElementById("popup").style.display="none";
 }
 
-// ambil daftar file di folder Menu
+// ganti sumber
+function gantiSumber(){
+  let s = document.getElementById("sumber").value;
+
+  if(s==="github"){
+    document.getElementById("pilihGithub").style.display="block";
+    document.getElementById("pilihLink").style.display="none";
+  }else{
+    document.getElementById("pilihGithub").style.display="none";
+    document.getElementById("pilihLink").style.display="block";
+  }
+}
+
+// ambil list file github
 function loadFileList(){
   fetch(apiUrl)
   .then(res=>res.json())
@@ -165,11 +188,22 @@ function loadFileList(){
 // tambah menu
 function tambahMenu(){
   let nama = document.getElementById("namaMenu").value;
-  let url = document.getElementById("fileSelect").value;
+  let sumber = document.getElementById("sumber").value;
+  let url="";
 
   if(nama===""){
     alert("Isi nama menu dulu");
     return;
+  }
+
+  if(sumber==="github"){
+    url = document.getElementById("fileSelect").value;
+  }else{
+    url = document.getElementById("linkManual").value;
+    if(url===""){
+      alert("Isi link dulu");
+      return;
+    }
   }
 
   let data = JSON.parse(localStorage.getItem("menus")||"[]");
@@ -180,12 +214,17 @@ function tambahMenu(){
   loadMenu();
 }
 
-// load isi halaman
+// load halaman
 function loadPage(url){
   fetch(url)
   .then(res=>res.text())
   .then(html=>{
     document.getElementById("content").innerHTML = html;
+  })
+  .catch(()=>{
+    // jika bukan html (misal website luar)
+    document.getElementById("content").innerHTML =
+    `<iframe src="${url}" width="100%" height="600px" style="border:none"></iframe>`;
   });
 }
 </script>
